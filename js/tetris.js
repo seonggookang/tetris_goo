@@ -1,5 +1,10 @@
+import BLOCKS from "./blocks.js";
+
 // DOM
 const playground = document.querySelector(".playground > ul");
+const gameText = document.querySelector(".game-text");
+const scoreDisplay = document.querySelector(".score");
+const restartButton = document.querySelector(".game-text > button");
 
 // Setting
 const GAME_ROWS = 20;
@@ -14,38 +19,8 @@ let duration = 500;
 let downInterval; // null값
 let tempMovingItem; // moving 실질적으로 실행하기 전에 잠시 담아두는곳
 
-const BLOCKS = {
-  tree: [
-    [
-      // 이거는 좌표? 정확히 무슨 말인지 모르겠음
-      [2, 1],
-      [0, 1],
-      [1, 0],
-      [1, 1],
-    ],
-    [
-      [2, 1],
-      [1, 2],
-      [1, 0],
-      [1, 1],
-    ], // 90도 돌린 모양
-    [
-      [2, 1],
-      [0, 1],
-      [1, 2],
-      [1, 1],
-    ], // 180도 ㅇㅇ
-    [
-      [1, 2],
-      [0, 1],
-      [1, 0],
-      [1, 1],
-    ], // 270도 ㅇㅇ
-  ],
-};
-
 const movingItem = {
-  type: "tree",
+  type: "",
   direction: 0, // 방향키 위로 올리면 방향 돌려주는
   top: 0,
   left: 0,
@@ -61,7 +36,8 @@ function init() {
   for (let i = 0; i < GAME_ROWS; i++) {
     prependNewLine();
   }
-  renderBlocks();
+  // renderBlocks();
+  generateNewBlock();
 }
 
 function prependNewLine() {
@@ -88,7 +64,6 @@ function renderBlocks(moveType = "") {
   BLOCKS[type][direction].some((block) => {
     const x = block[0] + left;
     const y = block[1] + top;
-    console.log("playground.childNodes[y] >> ", playground.childNodes[y]);
 
     const target = playground.childNodes[y]
       ? playground.childNodes[y].childNodes[0].childNodes[x]
@@ -99,9 +74,13 @@ function renderBlocks(moveType = "") {
       target.classList.add(type, "moving"); // moving을 추가해서 moving이란 클래스만 갖고 있을 때 색 칠해지도록
     } else {
       tempMovingItem = { ...movingItem };
+      if (moveType === "retry") {
+        clearInterval(downInterval);
+        showGameoverText();
+      }
       // 이벤트루프에 예약된 이벤트 들이 다 실행된 후에 스택에 다시 집어 넣어 실행
       setTimeout(() => {
-        renderBlocks(); // 재귀함수 실행 >> call stack maximum exceed 에러 발생 가능성 있음 >> 이벤트 루프 안에 넣지말고 task queue에 넣어놨다가 실행할 수 있도록 setTimeout 0초로 설정
+        renderBlocks("retry"); // 재귀함수 실행 >> call stack maximum exceed 에러 발생 가능성 있음 >> 이벤트 루프 안에 넣지말고 task queue에 넣어놨다가 실행할 수 있도록 setTimeout 0초로 설정
         if (moveType === "top") {
           // 아래로 내려가는데 바닥에 다 닿으면 고정시켜버리는 함수.
           seizeBlock();
@@ -122,10 +101,40 @@ function seizeBlock() {
     moving.classList.remove("moving"); // 밑에 도착했으면 moving은 없애주고
     moving.classList.add("seized"); // 처박힌 클래스 추가
   });
-  generateNewBlock(); // 동시에 새로운 블럭 생성.
+  checkMatch();
+  // generateNewBlock(); // 동시에 새로운 블럭 생성.
+}
+
+function checkMatch() {
+  // console.log("playground >> ", playground.childNodes);
+  playground.childNodes.forEach((child) => {
+    let matched = true;
+
+    child.children[0].childNodes.forEach((li) => {
+      if (!li.classList.contains("seized")) {
+        matched = false;
+      }
+    });
+    if (matched) {
+      child.remove();
+      prependNewLine();
+      score++;
+      scoreDisplay.innerText = score;
+    }
+  });
+  generateNewBlock();
 }
 
 function generateNewBlock() {
+  clearInterval(downInterval);
+  downInterval = setInterval(() => {
+    moveBlock("top", 1);
+  }, duration);
+
+  const blockArray = Object.entries(BLOCKS); // 객체를 배열화 시킴.
+  const randomIndex = Math.floor(Math.random() * blockArray.length);
+
+  movingItem.type = blockArray[randomIndex][0];
   movingItem.top = 0;
   movingItem.left = 3;
   movingItem.direction = 0;
@@ -153,6 +162,17 @@ function changeDirection() {
   renderBlocks();
 }
 
+function dropBlock() {
+  clearInterval(downInterval);
+  downInterval = setInterval(() => {
+    moveBlock("top", 1);
+  }, 10);
+}
+
+function showGameoverText() {
+  gameText.style.display = "flex";
+}
+
 document.addEventListener("keydown", (e) => {
   switch (e.keyCode) {
     case 39:
@@ -167,11 +187,17 @@ document.addEventListener("keydown", (e) => {
     case 38:
       changeDirection();
       break;
-    // case 32:
-    //   moveBlock("top", 18);
-    //   break;
+    case 32:
+      dropBlock();
+      break;
     default:
       break;
   }
   console.log("e >> ", e);
+});
+
+restartButton.addEventListener("click", () => {
+  playground.innerHTML = "";
+  gameText.style.display = "none";
+  init();
 });

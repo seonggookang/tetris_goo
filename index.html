@@ -8,12 +8,17 @@
   </head>
   <body>
     <div class="wrapper">
+      <div class="game-text">
+        <span>게임 종료</span>
+        <button>다시 시작</button>
+      </div>
       <div class="score">0</div>
       <div class="playground">
         <ul></ul>
         <!-- 테트리스판 10*20 만들기(tr td로 해도됨) -->
       </div>
     </div>
-    <script src="js/tetris.js"></script>
+    <script src="js/tetris.js" type="module"></script>
+    <!-- type=module을 줘야 import 구문 사용 가능 -->
   </body>
 </html>
