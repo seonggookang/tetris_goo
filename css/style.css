@@ -1,0 +1,44 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+
+ul {
+  list-style: none;
+}
+
+body {
+  height: 100%;
+  overflow: hidden; /* 넘치는 부분은 스크롤 생기지 않도록 */
+}
+
+.score {
+  text-align: center;
+  font-size: 36px;
+  margin-bottom: 2rem; /* 왜 rem을 쓴거지? */
+}
+
+.playground > ul {
+  border: 1px solid #333;
+  width: 250px;
+  margin: 0 auto;
+}
+
+.playground > ul > li {
+  width: 100%; /* 넓이가 25px이 됨 ( height를 따라가는 건가?) */
+  height: 25px;
+}
+
+.playground > ul > li > ul {
+  display: flex;
+}
+
+.playground > ul > li > ul > li {
+  width: 25px;
+  height: 25px;
+  outline: 1px solid #ccc; /* 이게 뭐꼬? */
+}
+
+.tree {
+  background: #67c23a;
+}
